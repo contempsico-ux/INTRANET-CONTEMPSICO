@@ -93,7 +93,15 @@ const App: React.FC = () => {
   useEffect(() => {
     setAuthLoading(true);
 
+    // Safety timeout: if auth check takes more than 3 seconds, show login screen
+    const safetyTimeout = setTimeout(() => {
+      console.warn("Auth check timeout - showing login screen");
+      setAuthLoading(false);
+      setCurrentUser(null);
+    }, 3000);
+
     const { data, error } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      clearTimeout(safetyTimeout); // Clear timeout if callback is called
       try {
         if (session?.user) {
           // If a session exists, fetch the full user profile from our database
@@ -118,6 +126,7 @@ const App: React.FC = () => {
     
     if (error) {
       console.error("Failed to subscribe to auth state changes:", error);
+      clearTimeout(safetyTimeout);
       setAuthLoading(false);
       return;
     }
@@ -125,6 +134,7 @@ const App: React.FC = () => {
     const subscription = data?.subscription;
 
     return () => {
+      clearTimeout(safetyTimeout);
       // Cleanup the subscription when the component unmounts
       subscription?.unsubscribe();
     };
