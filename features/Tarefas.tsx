@@ -207,27 +207,9 @@ const Tarefas: React.FC = () => {
         if (!currentUser) return;
         setIsSubmitting(true);
         try {
-            let attachmentUrl = editingTask?.attachmentUrl || undefined;
-            let attachmentPath = editingTask?.attachmentPath || undefined;
-
-            // 1. Handle file removal if requested
-            if (newTask.removeAttachment && editingTask?.attachmentPath) {
-                await deleteFile(editingTask.attachmentPath);
-                attachmentUrl = undefined;
-                attachmentPath = undefined;
-            }
-
-            // 2. Handle new file upload
-            if (newTask.attachmentFile) {
-                // If there was an old file, delete it first
-                if (editingTask?.attachmentPath) {
-                    await deleteFile(editingTask.attachmentPath);
-                }
-                // Upload the new file
-                const { publicUrl, path } = await uploadFile(newTask.attachmentFile);
-                attachmentUrl = publicUrl;
-                attachmentPath = path;
-            }
+            // Use the URL directly from the input field
+            const attachmentUrl = newTask.attachmentUrl || undefined;
+            const attachmentPath = undefined; // Not used anymore
 
             const taskData = {
                 title: newTask.title, description: newTask.description, type: newTask.type,
@@ -389,21 +371,13 @@ const Tarefas: React.FC = () => {
                                 Substituir
                             </Button>
                         </div>
-                    ) : newTask.attachmentFile ? (
-                         <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-md text-sm">
-                            <span className="text-green-800 truncate">{newTask.attachmentFile.name}</span>
-                            <button onClick={() => setNewTask(prev => ({...prev, attachmentFile: null}))} className="text-red-500 hover:text-red-700">
-                                <XMarkIcon className="w-4 h-4" />
-                            </button>
-                        </div>
                     ) : (
                          <input
-                            type="file"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0] || null;
-                                setNewTask(prev => ({ ...prev, attachmentFile: file, removeAttachment: false }));
-                            }}
-                            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                            type="url"
+                            placeholder="Cole o link do arquivo (Google Drive, Dropbox, etc.)"
+                            value={newTask.attachmentUrl || ''}
+                            onChange={(e) => setNewTask(prev => ({ ...prev, attachmentUrl: e.target.value }))}
+                            className="w-full p-2 border rounded-md text-sm"
                         />
                     )}
                 </div>
