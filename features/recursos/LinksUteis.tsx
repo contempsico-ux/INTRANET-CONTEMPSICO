@@ -45,10 +45,10 @@ const LinksUteis: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleSave = async () => {
-        console.log('handleSave called', formData);
-        
-        // Prevent double submission using ref
+    const handleSave = async (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        console.log('handleSave called', { isSubmittingRef: isSubmittingRef.current });
         if (isSubmittingRef.current) {
             console.log('Already submitting, ignoring duplicate call');
             return;
@@ -178,8 +178,8 @@ const LinksUteis: React.FC = () => {
                     <input type="url" placeholder="URL Completa (ex: https://site.com)" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full p-2 border rounded-md" />
                     {/* TODO: Adicionar seletor de visibilidade se necessário */}
                     <div className="flex justify-end space-x-2">
-                        <Button variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancelar</Button>
-                        <Button onClick={handleSave} isLoading={isSubmitting}>Salvar</Button>
+                        <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancelar</Button>
+                        <Button type="button" onClick={handleSave} disabled={isSubmitting} isLoading={isSubmitting}>Salvar</Button>
                     </div>
                 </div>
             </Modal>
