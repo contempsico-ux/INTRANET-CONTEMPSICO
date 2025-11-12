@@ -5,8 +5,8 @@ import {
 
 // --- SUPABASE CLIENT SETUP ---
 // Configuration based on the user's Supabase project.
-const supabaseUrl = 'https://whxpryptjitmnburgvsx.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoeHByeXB0aml0bW5idXJndnN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MTE4ODQsImV4cCI6MjA3ODI4Nzg4NH0.YFhj2MlFqmoGwXVXcoiuXmDHHmuX-1Kwb1DisCTvjlk';
+const supabaseUrl = 'https://yskfzkbirhshwebkasdp.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlza2Z6a2JpcmhzaHdlYmthc2RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MDk0OTMsImV4cCI6MjA3ODQ4NTQ5M30.JV-MhWMGrW1gKd1gbN0--bmURO9Pd17Ao_8WpPpaCq0';
 
 // A bucket for storing all user-uploaded files.
 // IMPORTANT: You must create this bucket in your Supabase project dashboard
