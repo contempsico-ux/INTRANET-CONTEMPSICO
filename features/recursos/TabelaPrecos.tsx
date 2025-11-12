@@ -43,22 +43,21 @@ const TabelaPrecos: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
     if (!formData.serviceName.trim() || formData.value <= 0) {
         addToast("Nome do serviço e valor (maior que zero) são obrigatórios.", "error");
         return;
     }
+    
     setIsSubmitting(true);
     try {
-      const apiCall = editingService
-        ? updateService({ ...editingService, ...formData })
-        : addService(formData);
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout')), 25000) // 25-second timeout
-      );
-
-      const result = await Promise.race([apiCall, timeoutPromise]);
+      const result = editingService
+        ? await updateService({ ...editingService, ...formData })
+        : await addService(formData);
 
       if (editingService) {
         setServices(prev => sortServices(prev.map(s => s.id === result.id ? result : s)));
@@ -67,14 +66,10 @@ const TabelaPrecos: React.FC = () => {
         setServices(prev => sortServices([result, ...prev]));
         addToast("Serviço adicionado!", "success");
       }
-       setIsModalOpen(false);
+      setIsModalOpen(false);
     } catch (err) {
       console.error("Save service failed:", err);
-      if (err instanceof Error && err.message === 'Timeout') {
-          addToast("A operação está demorando mais que o esperado. Verifique sua conexão ou tente novamente em alguns instantes.", "error");
-      } else {
-          addToast("Falha ao salvar. Tente novamente.", "error");
-      }
+      addToast("Falha ao salvar. Tente novamente.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -208,10 +203,31 @@ const TabelaPrecos: React.FC = () => {
        {renderContent()}
 
        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingService ? "Editar Serviço" : "Adicionar Novo Serviço"}>
-        <div className="space-y-4">
-          <input type="text" placeholder="Nome do Serviço" value={formData.serviceName} onChange={(e) => setFormData({ ...formData, serviceName: e.target.value })} className="w-full p-2 border rounded-md" />
-          <textarea placeholder="Descrição" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full p-2 border rounded-md"></textarea>
-          <input type="number" placeholder="Valor" value={formData.value <= 0 ? '' : formData.value} onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })} className="w-full p-2 border rounded-md" />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input 
+            type="text" 
+            placeholder="Nome do Serviço" 
+            value={formData.serviceName} 
+            onChange={(e) => setFormData({ ...formData, serviceName: e.target.value })} 
+            className="w-full p-2 border rounded-md"
+            disabled={isSubmitting}
+          />
+          <textarea 
+            placeholder="Descrição" 
+            value={formData.description} 
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+            rows={3} 
+            className="w-full p-2 border rounded-md"
+            disabled={isSubmitting}
+          />
+          <input 
+            type="number" 
+            placeholder="Valor" 
+            value={formData.value <= 0 ? '' : formData.value} 
+            onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })} 
+            className="w-full p-2 border rounded-md"
+            disabled={isSubmitting}
+          />
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Visível para:</label>
@@ -222,6 +238,7 @@ const TabelaPrecos: React.FC = () => {
                         checked={allSelected}
                         onChange={handleToggleAllVisibility}
                         className="rounded text-primary focus:ring-primary"
+                        disabled={isSubmitting}
                     />
                     <span>Todos</span>
                 </label>
@@ -232,6 +249,7 @@ const TabelaPrecos: React.FC = () => {
                            checked={formData.visibility.includes(p)}
                            onChange={() => handleVisibilityChange(p)}
                            className="rounded text-primary focus:ring-primary"
+                           disabled={isSubmitting}
                        />
                        <span>{p}</span>
                    </label>
@@ -241,10 +259,14 @@ const TabelaPrecos: React.FC = () => {
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancelar</Button>
-            <Button onClick={handleSave} isLoading={isSubmitting}>Salvar</Button>
+            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
+              Salvar
+            </Button>
           </div>
-        </div>
+        </form>
       </Modal>
       <ConfirmationModal
           isOpen={!!itemToDelete}
