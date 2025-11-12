@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, useToast } from '../../App';
 import { Card, Button, Modal, ConfirmationModal } from '../../components/UI';
 import { Profile, UsefulLink } from '../../types';
@@ -15,6 +15,7 @@ const LinksUteis: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const isSubmittingRef = useRef(false);
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingLink, setEditingLink] = useState<UsefulLink | null>(null);
@@ -47,19 +48,22 @@ const LinksUteis: React.FC = () => {
     const handleSave = async () => {
         console.log('handleSave called', formData);
         
-        // Prevent double submission
-        if (isSubmitting) {
+        // Prevent double submission using ref
+        if (isSubmittingRef.current) {
             console.log('Already submitting, ignoring duplicate call');
             return;
         }
+        isSubmittingRef.current = true;
         
         if (!formData.title || !formData.url || !formData.category) {
             addToast("Por favor, preencha todos os campos.", "error");
+            isSubmittingRef.current = false;
             return;
         }
         if (!urlRegex.test(formData.url)) {
             console.log('URL validation failed:', formData.url);
             addToast("Por favor, insira uma URL válida (ex: https://site.com).", "error");
+            isSubmittingRef.current = false;
             return;
         }
 
@@ -96,6 +100,7 @@ const LinksUteis: React.FC = () => {
             }
         } finally {
             setIsSubmitting(false);
+            isSubmittingRef.current = false;
         }
     };
 
