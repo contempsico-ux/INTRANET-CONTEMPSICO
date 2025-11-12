@@ -151,9 +151,9 @@ const TabelaPrecos: React.FC = () => {
     addToast("Download da tabela iniciado!", "success");
   };
   
-  // Agrupar serviços que têm versão À vista e Parcelado
+  // Agrupar serviços que têm versão À vista, Parcelado e Pacote
   const groupedServices = useMemo(() => {
-    const groups: { [key: string]: { base: string, aVista?: ServicePrice, parcelado?: ServicePrice, single?: ServicePrice } } = {};
+    const groups: { [key: string]: { base: string, aVista?: ServicePrice, parcelado?: ServicePrice, pacote?: ServicePrice, single?: ServicePrice } } = {};
     
     visibleServices.forEach(service => {
       const name = service.serviceName;
@@ -169,6 +169,10 @@ const TabelaPrecos: React.FC = () => {
         const baseName = cleanName.replace(' (Parcelado)', '');
         if (!groups[baseName]) groups[baseName] = { base: baseName };
         groups[baseName].parcelado = service;
+      } else if (cleanName.includes('(Pacote)')) {
+        const baseName = cleanName.replace(' (Pacote)', '');
+        if (!groups[baseName]) groups[baseName] = { base: baseName };
+        groups[baseName].pacote = service;
       } else {
         groups[cleanName] = { base: cleanName, single: service };
       }
@@ -177,7 +181,7 @@ const TabelaPrecos: React.FC = () => {
     return Object.values(groups);
   }, [visibleServices]);
 
-  const [paymentModes, setPaymentModes] = useState<{ [key: string]: 'aVista' | 'parcelado' }>({});
+  const [paymentModes, setPaymentModes] = useState<{ [key: string]: 'avulsa' | 'pacote' | 'aVista' | 'parcelado' }>({});
 
   const renderContent = () => {
     if (isLoading) return <div className="flex justify-center items-center p-8"><SpinnerIcon className="w-8 h-8 text-primary mr-3" /> Carregando...</div>;
@@ -189,11 +193,22 @@ const TabelaPrecos: React.FC = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {groupedServices.map((group, idx) => {
-          const hasBothModes = group.aVista && group.parcelado;
-          const currentMode = paymentModes[group.base] || 'aVista';
-          const displayService = hasBothModes 
-            ? (currentMode === 'aVista' ? group.aVista! : group.parcelado!)
-            : group.single!;
+          // Detectar tipo de serviço
+          const hasPaymentModes = group.aVista && group.parcelado; // Avaliações
+          const hasPackageMode = group.pacote && group.single; // Psicoterapias
+          
+          let currentMode: string;
+          let displayService: ServicePrice;
+          
+          if (hasPaymentModes) {
+            currentMode = paymentModes[group.base] || 'aVista';
+            displayService = currentMode === 'aVista' ? group.aVista! : group.parcelado!;
+          } else if (hasPackageMode) {
+            currentMode = paymentModes[group.base] || 'avulsa';
+            displayService = currentMode === 'avulsa' ? group.single! : group.pacote!;
+          } else {
+            displayService = group.single!;
+          }
           
           return (
             <Card key={displayService.id} className="flex flex-col justify-between relative">
@@ -203,7 +218,7 @@ const TabelaPrecos: React.FC = () => {
                 </h2>
                 <p className="text-gray-600 text-sm mb-4">{displayService.description}</p>
                 
-                {hasBothModes && (
+                {hasPaymentModes && (
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={() => setPaymentModes(prev => ({ ...prev, [group.base]: 'aVista' }))}
@@ -224,6 +239,31 @@ const TabelaPrecos: React.FC = () => {
                       }`}
                     >
                       Parcelado
+                    </button>
+                  </div>
+                )}
+                
+                {hasPackageMode && (
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setPaymentModes(prev => ({ ...prev, [group.base]: 'avulsa' }))}
+                      className={`flex-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                        currentMode === 'avulsa'
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Avulsa
+                    </button>
+                    <button
+                      onClick={() => setPaymentModes(prev => ({ ...prev, [group.base]: 'pacote' }))}
+                      className={`flex-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                        currentMode === 'pacote'
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Pacote
                     </button>
                   </div>
                 )}
