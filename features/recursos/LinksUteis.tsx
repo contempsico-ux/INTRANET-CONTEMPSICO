@@ -46,6 +46,13 @@ const LinksUteis: React.FC = () => {
 
     const handleSave = async () => {
         console.log('handleSave called', formData);
+        
+        // Prevent double submission
+        if (isSubmitting) {
+            console.log('Already submitting, ignoring duplicate call');
+            return;
+        }
+        
         if (!formData.title || !formData.url || !formData.category) {
             addToast("Por favor, preencha todos os campos.", "error");
             return;
