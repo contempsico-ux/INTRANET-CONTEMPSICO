@@ -16,8 +16,10 @@ const Recursos: React.FC = () => {
     const [activeTab, setActiveTab] = useState('treinamentos');
 
     useEffect(() => {
-      const restrictedTabsForCollab = ['dados-psis', 'tabela-precos'];
-      const restrictedTabsForPsi = ['dados-psis', 'tabela-precos', 'relatorio-produtividade'];
+      // Psicólogo NÃO pode ver: Links Úteis, Tabela de Preços, Dados Psis, Relatório de Produtividade
+      const restrictedTabsForPsi = ['links', 'dados-psis', 'tabela-precos', 'relatorio-produtividade'];
+      // Colaborador NÃO pode ver: Relatório de Produtividade
+      const restrictedTabsForCollab = ['relatorio-produtividade'];
       
       let currentRestrictedTabs: string[] = [];
       if (currentUser?.profile === Profile.Colaborador) {
@@ -47,9 +49,13 @@ const Recursos: React.FC = () => {
                         <button onClick={() => setActiveTab('regulamento')} className={navItemClasses('regulamento')}>
                             Regulamento Interno
                         </button>
-                        <button onClick={() => setActiveTab('links')} className={navItemClasses('links')}>
-                            Links Úteis
-                        </button>
+                        {/* Links Úteis: apenas Gestão e Colaborador */}
+                        {currentUser?.profile && [Profile.Gestao, Profile.Colaborador].includes(currentUser.profile) && (
+                            <button onClick={() => setActiveTab('links')} className={navItemClasses('links')}>
+                                Links Úteis
+                            </button>
+                        )}
+                        {/* Tabela de Preços e Dados Psis: apenas Gestão e Colaborador */}
                         {currentUser?.profile && [Profile.Gestao, Profile.Colaborador].includes(currentUser.profile) && (
                            <>
                                <button onClick={() => setActiveTab('tabela-precos')} className={navItemClasses('tabela-precos')}>
