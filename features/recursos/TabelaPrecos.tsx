@@ -151,33 +151,97 @@ const TabelaPrecos: React.FC = () => {
     addToast("Download da tabela iniciado!", "success");
   };
   
+  // Agrupar serviços que têm versão À vista e Parcelado
+  const groupedServices = useMemo(() => {
+    const groups: { [key: string]: { base: string, aVista?: ServicePrice, parcelado?: ServicePrice, single?: ServicePrice } } = {};
+    
+    visibleServices.forEach(service => {
+      const name = service.serviceName;
+      
+      // Remover numeração do início
+      const cleanName = name.replace(/^\d+\.\s*/, '');
+      
+      if (cleanName.includes('(À vista)')) {
+        const baseName = cleanName.replace(' (À vista)', '');
+        if (!groups[baseName]) groups[baseName] = { base: baseName };
+        groups[baseName].aVista = service;
+      } else if (cleanName.includes('(Parcelado)')) {
+        const baseName = cleanName.replace(' (Parcelado)', '');
+        if (!groups[baseName]) groups[baseName] = { base: baseName };
+        groups[baseName].parcelado = service;
+      } else {
+        groups[cleanName] = { base: cleanName, single: service };
+      }
+    });
+    
+    return Object.values(groups);
+  }, [visibleServices]);
+
+  const [paymentModes, setPaymentModes] = useState<{ [key: string]: 'aVista' | 'parcelado' }>({});
+
   const renderContent = () => {
     if (isLoading) return <div className="flex justify-center items-center p-8"><SpinnerIcon className="w-8 h-8 text-primary mr-3" /> Carregando...</div>;
     if (error) return <div className="text-center text-red-600 bg-red-100 p-4 rounded-md">{error}</div>;
-     if (visibleServices.length === 0) {
+    if (groupedServices.length === 0) {
         return <div className="text-center text-gray-500 p-4">Nenhum serviço foi adicionado.</div>;
     }
+    
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {visibleServices.map(service => (
-          <Card key={service.id} className="flex flex-col justify-between relative">
-            <div>
-              <h2 className="text-xl font-bold text-primary mb-2 pr-16">{service.serviceName}</h2>
-              <p className="text-gray-600 text-sm mb-4">{service.description}</p>
-            </div>
-            <div className="mt-auto pt-4 border-t border-gray-200">
-              <p className="text-3xl font-extrabold text-gray-800">
-                {service.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </p>
-            </div>
-            {currentUser?.profile === Profile.Gestao && (
-              <div className="absolute top-4 right-4 flex space-x-2">
-                  <Button variant="secondary" size="sm" onClick={() => handleOpenModal(service)}><PencilIcon className="w-4 h-4"/></Button>
-                  <Button variant="danger" size="sm" onClick={() => setItemToDelete(service)}><TrashIcon className="w-4 h-4"/></Button>
+        {groupedServices.map((group, idx) => {
+          const hasBothModes = group.aVista && group.parcelado;
+          const currentMode = paymentModes[group.base] || 'aVista';
+          const displayService = hasBothModes 
+            ? (currentMode === 'aVista' ? group.aVista! : group.parcelado!)
+            : group.single!;
+          
+          return (
+            <Card key={displayService.id} className="flex flex-col justify-between relative">
+              <div>
+                <h2 className="text-xl font-bold text-primary mb-2 pr-16">
+                  {group.base}
+                </h2>
+                <p className="text-gray-600 text-sm mb-4">{displayService.description}</p>
+                
+                {hasBothModes && (
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setPaymentModes(prev => ({ ...prev, [group.base]: 'aVista' }))}
+                      className={`flex-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                        currentMode === 'aVista'
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      À vista
+                    </button>
+                    <button
+                      onClick={() => setPaymentModes(prev => ({ ...prev, [group.base]: 'parcelado' }))}
+                      className={`flex-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                        currentMode === 'parcelado'
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Parcelado
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </Card>
-        ))}
+              <div className="mt-auto pt-4 border-t border-gray-200">
+                <p className="text-3xl font-extrabold text-gray-800">
+                  {displayService.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
+              </div>
+              {currentUser?.profile === Profile.Gestao && (
+                <div className="absolute top-4 right-4 flex space-x-2">
+                    <Button variant="secondary" size="sm" onClick={() => handleOpenModal(displayService)}><PencilIcon className="w-4 h-4"/></Button>
+                    <Button variant="danger" size="sm" onClick={() => setItemToDelete(displayService)}><TrashIcon className="w-4 h-4"/></Button>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     );
   };
