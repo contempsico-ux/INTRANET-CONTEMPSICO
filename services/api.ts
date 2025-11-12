@@ -11,7 +11,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // A bucket for storing all user-uploaded files.
 // IMPORTANT: You must create this bucket in your Supabase project dashboard
 // and set its access policy (e.g., make it public for read access).
-const STORAGE_BUCKET = 'intranet-files';
+const STORAGE_BUCKET = 'arquivos-da-intranet';
 
 // Initialize the Supabase client.
 // The `export` allows us to use this client instance in other files, like App.tsx for auth listeners.
