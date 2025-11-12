@@ -45,26 +45,32 @@ const LinksUteis: React.FC = () => {
     };
 
     const handleSave = async () => {
+        console.log('handleSave called', formData);
         if (!formData.title || !formData.url || !formData.category) {
             addToast("Por favor, preencha todos os campos.", "error");
             return;
         }
         if (!urlRegex.test(formData.url)) {
+            console.log('URL validation failed:', formData.url);
             addToast("Por favor, insira uma URL válida (ex: https://site.com).", "error");
             return;
         }
 
+        console.log('Starting API call...');
         setIsSubmitting(true);
         try {
             const apiCall = editingLink
               ? updateLink({ ...editingLink, ...formData })
               : addLink(formData);
+            console.log('API call created');
               
             const timeoutPromise = new Promise<never>((_, reject) =>
               setTimeout(() => reject(new Error('Timeout')), 25000) // 25-second timeout
             );
       
+            console.log('Waiting for result...');
             const result = await Promise.race([apiCall, timeoutPromise]);
+            console.log('Result received:', result);
 
             if (editingLink) {
                 setLinks(links.map(l => l.id === result.id ? result : l));
